@@ -27,6 +27,7 @@
 
 - [At a glance](#at-a-glance)
 - [Project status](#project-status)
+- [What's new on 13 November](#whats-new-on-13-november)
 - [Why static recompilation](#why-static-recompilation)
 - [How it works](#how-it-works)
   - [1. Analysing the executable](#1-analysing-the-executable)
@@ -40,6 +41,7 @@
 - [Performance](#performance)
 - [Test devices](#test-devices)
 - [Requirements (planned)](#requirements-planned)
+- [Installation](#installation)
 - [Roadmap](#roadmap)
 - [Milestones](#milestones)
 - [Support the project](#support-the-project)
@@ -83,8 +85,8 @@ This port takes a different route, the same one used by the Android port of Metr
 | **0** | Tooling, executable analysis, function catalogue | ✅ done |
 | **1** | Translation to C and PC test build | ✅ done: recompiled game **playable on Windows**, 25–38 fps |
 | **2** | Android ARM64 runtime, Vulkan graphics, audio | 🔧 in progress: **in-game in Paris** on a Galaxy S24 Ultra |
-| **3** | Launcher and touch controls | 🔧 in progress: launcher, settings and touch pad working |
-| **4** | Performance | ⏳ started alongside phase 2 |
+| **3** | Launcher and touch controls | 🔧 nearly done: themed launcher, settings, touch pad with auto-sprint, music |
+| **4** | Performance | 🔧 in progress: reserved core, buffer stutters, waits between threads |
 
 ### Already working on the phone
 
@@ -92,19 +94,55 @@ This port takes a different route, the same one used by the Android port of Metr
 - ✅ **audio** (Wwise, through a rebuilt DirectSound → AAudio at 48 kHz)
 - ✅ full graphics: native screen resolution, high textures, **post-processing** (the black and white with red)
 - ✅ correctly animated characters and the city drawn in layers (near / mid / far) without artifacts
-- ✅ **on-screen gamepad** and **Bluetooth controllers** (XInput)
+- ✅ **on-screen gamepad** with **auto-sprint** (left stick pushed all the way forward, as in COD Mobile) and **Bluetooth controllers** (XInput)
 - ✅ leaving with the Home button and returning without losing progress
 - ✅ Vulkan pipeline cache: no recompilation from the second launch on
-- ✅ dedicated launcher with video settings equivalent to `VideoSetup.exe`
+- ✅ dedicated launcher with app icon, rotating artwork, video settings equivalent to `VideoSetup.exe`, background music with an on/off switch and a Ko-fi button
 
 ### Still to do
 
-- 🔧 **smoothness**: 15–22 fps in the heaviest streets, 23–31 indoors (target: a stable 30)
-- 🔧 GPU buffer stalls when post-processing is enabled
+- 🔧 **smoothness**: 17–23 fps in the heaviest streets, 37–44 in lighter areas (target: a stable 30 everywhere)
+- 🔧 confirm on the phone the fix for **stutters** caused by GPU buffers ([what's new](#whats-new-on-13-november))
 - 🔧 Bink videos (currently skipped)
 - 🔧 screens wider than 16:9: an off-screen HUD element shows at the edge (16:9 with pillarboxing planned)
 - ⏳ testing on older Vulkan 1.1 GPUs (RedMagic 5G / Adreno 650)
 - ⏳ control layout editor and gyroscope
+
+The next steps, in priority order, are in the [roadmap](#next-steps).
+
+---
+
+## What's new on 13 November
+
+A day spent on smoothness, controls and the launcher, all driven by logs from the phone.
+
+**Performance**
+
+- **A core reserved for the main thread.** The thread that computes every frame sat *in the run queue*,
+  ready but without a free core, for 80–190 ms every second. It now has the fastest core of the chip to
+  itself (3.4 GHz on the S24 Ultra) at a higher priority, and the app's other threads use the remaining
+  cores: queue time dropped to **1–15 ms per second**. It can be turned off under *Diagnostics*.
+- **Fewer stutters.** The game keeps updating small vertex buffers that the GPU is still using, and DXVK
+  waited for the GPU to finish the frame before writing to them: up to 70 ms of stall. The data now goes
+  into a fresh copy of the buffer (`D3DLOCK_DISCARD`), so nothing waits. *To be confirmed by the next test
+  on the phone.*
+- **Low preset fixed.** The *Low* preset left the view distance at maximum; it now scales with the preset,
+  so far fewer objects are drawn in the streets.
+
+**Controls**
+
+- **Auto-sprint.** Push the left stick all the way forward and the character runs; hold it there for a
+  moment and the sprint locks (vibration and a *CORSA* badge): you can lift your finger and only move the
+  camera. A tap on the stick unlocks it. It can be turned off under *Controls*.
+- **More responsive camera.** The three camera speed presets are about 15% faster.
+
+**Launcher**
+
+- **Themed adaptive icon**: the phone crops it to a circle, squircle or square to match its style.
+- **Background music** with a switch in the top-right corner: one tap turns it on or off, it fades in and
+  out, and it stops by itself when the game starts or a call comes in. You can add your own tracks in
+  `/sdcard/Saboteur/musica` (mp3, ogg, m4a, flac). AI-made launcher tracks are coming.
+- **Illustrated Ko-fi button** at the bottom of the settings.
 
 ---
 
@@ -250,32 +288,40 @@ seen on the phone:
 
 ### 8. Launcher and touch controls
 
-- **Full-screen launcher** with rotating images, a *Play* button and a side sheet with three sections:
-  **Video**, **Controls**, **Diagnostics**.
+- **Full-screen launcher** with rotating artwork, a *Play* button and a side sheet with three sections:
+  **Video**, **Controls**, **Diagnostics**; the **music** switch sits in the top-right corner.
 - **Video settings** with the same options as `VideoSetup.exe` (a .NET Windows tool that can't run on
   Android): shadows, view distance, texture/object/city-slice quality, post-processing, low/medium/high
   presets, plus **render resolution** at 100, 75 or 50%.
-- **Xbox-style on-screen pad**: fixed left stick, camera by dragging on the right, A/B/X/Y, bumpers and
-  triggers, d-pad, L3/R3, Back/Start, adjustable camera speed.
+- **Xbox-style on-screen pad**: fixed left stick with **auto-sprint** (all the way forward: run; held
+  there: sprint locked), camera by dragging on the right, A/B/X/Y, bumpers and triggers, d-pad, L3/R3,
+  Back/Start, adjustable camera speed.
 - **Bluetooth controllers** recognised as XInput gamepads.
+- **Background music** in the launcher, from the tracks in the APK and in `/sdcard/Saboteur/musica`, with a
+  switch to turn it off.
 
 ---
 
 ## Performance
 
-Measured on a **Samsung Galaxy S24 Ultra** (Snapdragon 8 Gen 3), low video preset, high view distance:
+Measured on a **Samsung Galaxy S24 Ultra** (Snapdragon 8 Gen 3), low video preset:
 
 | Scene | Frames per second |
 | --- | --- |
 | Indoors (the Belle) | 23–31 |
-| Streets, typical areas | 21–26 |
-| Streets, heavy areas (3,000–4,800 draws per frame) | 15–22 |
+| Streets, lighter areas (1,000–1,700 draws per frame) | 37–44 |
+| Streets, heavy areas (2,300–3,700 draws per frame) | 17–23 |
 | With post-processing | 12–14 (improving) |
 
 Starting point: 13–16 fps in the first playable build on the phone. The built-in tools (per-thread
 sampling profiler, Direct3D timing per method, waits per object, thread run-queue time, core clocks)
-show that the limit today isn't raw compute but the chain of waits between the game's threads and the
-clock speed Android keeps the big cores at: that's where work is going now.
+show where the time goes now:
+
+- the game's **main thread** is busy 850–940 ms out of every second even with a core of its own: it sets
+  the pace, together with the clock speed the phone keeps the cores at;
+- after a few minutes the phone heats up and drops the big cores **from 3.4 to about 2 GHz**;
+- **DXVK's threads** wait 250–320 ms per second for a free core, and the main thread waits 90–170 ms per
+  second for the worker threads: those are the next things to work on.
 
 ---
 
@@ -292,10 +338,37 @@ clock speed Android keeps the big cores at: that's where work is going now.
 
 Indicative, may change before any public build:
 
-- a **PC copy of The Saboteur** (reference: GOG), with ≈7.7 GB of data to copy to the phone;
-- **Android 10 or later**, **ARM64** CPU, **Vulkan** GPU;
+- a **PC copy of The Saboteur** (reference: GOG), with ≈7.7 GB of data to copy to the phone: the app won't
+  start without the original `Saboteur.exe`;
+- **Android 10 or later**, **ARM64** CPU, **Vulkan** GPU (tested on Vulkan 1.3; 1.1 still to be tested);
 - a recent high-end SoC (Snapdragon 8 Gen 2/Gen 3 class) for smooth play;
+- about 8 GB free on the phone for the game data, plus ≈300 MB for the app;
 - optional: a Bluetooth controller.
+
+---
+
+## Installation
+
+> [!NOTE]
+> The test APK isn't public yet. When it is, it will appear on the
+> [Releases](https://github.com/lumishelf/saboteur-android/releases) page; these will be the steps.
+
+1. Install *The Saboteur* on PC (GOG version) and copy **the whole game folder** to the phone as
+   `/sdcard/Saboteur/game`: `/sdcard/Saboteur/game/Saboteur.exe` must exist.
+2. Install the APK and open it.
+3. The launcher asks for **All files access**, which it needs to read the game files: turn it on and go
+   back to the launcher.
+4. Pick a video preset (*Low* to start with) and tap **Play**.
+
+| Path on the phone | Contents |
+| --- | --- |
+| `/sdcard/Saboteur/game` | the game files, copied from your own PC install |
+| `/sdcard/Saboteur/save` | saves and game settings |
+| `/sdcard/Saboteur/logs/saboteur.log` | log of the last session, to attach when reporting a problem |
+| `/sdcard/Saboteur/musica` | your own tracks for the launcher |
+| `/sdcard/Saboteur/opzioni.ini` | launcher settings |
+
+The APK contains no game files: graphics, sounds, text and data all come from your own copy.
 
 ---
 
@@ -308,12 +381,31 @@ Indicative, may change before any public build:
 - [x] First boot on Android, audio, in-game in Paris
 - [x] Characters, map and post-processing fixed on Adreno
 - [x] On-screen pad, Bluetooth controllers, launcher with video settings
+- [x] Core reserved for the main thread, auto-sprint, icon and music in the launcher
+- [ ] GPU buffer stutters gone (fix ready, to be confirmed)
 - [ ] Stable 30 fps in the streets on the S24 Ultra
 - [ ] Post-processing without losing smoothness
 - [ ] Bink videos
 - [ ] 16:9 with pillarboxing and correct HUD on wide screens
 - [ ] Vulkan 1.1 GPUs (Adreno 650 and similar)
 - [ ] Control layout editor, gyroscope
+
+### Next steps
+
+In priority order:
+
+1. **Stutters**: measure the new buffer writes on the phone and close the remaining cases.
+2. **DXVK threads**: they wait 250–320 ms per second for a core today; with the right priority and cores
+   the GPU gets its work sooner.
+3. **Main-thread waits**: find out why it waits for the worker threads (90–170 ms per second) and shorten
+   that chain.
+4. **Heat**: an optional 30 fps cap, for a cooler phone and a steadier pace.
+5. **Post-processing** without losing smoothness.
+6. **Bink videos**, decoded with FFmpeg.
+7. **16:9 with pillarboxing** and correct HUD on wide screens.
+8. **Vulkan 1.1**: first test on the RedMagic 5G (Adreno 650).
+9. **Launcher music**: the AI-made tracks.
+10. **Controls**: layout editor and gyroscope.
 
 ---
 
@@ -330,6 +422,8 @@ Indicative, may change before any public build:
 | 11 Nov 2026 | Layered city fixed (depth slices), delayed readback, video settings |
 | 11 Nov 2026 | CPU state in a per-thread block, targeted waits: from 15 to 23–31 fps indoors |
 | 12–13 Nov 2026 | New launcher, per-thread performance profiling, Android tuning |
+| 13 Nov 2026 | GitHub page and Ko-fi; app icon, Ko-fi button and background music in the launcher |
+| 13 Nov 2026 | Core reserved for the main thread (run queue from 77–188 to 1–15 ms/s), auto-sprint, low preset fixed, GPU buffers without stalls |
 
 ---
 

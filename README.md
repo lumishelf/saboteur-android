@@ -28,6 +28,7 @@
 
 - [In breve](#in-breve)
 - [Stato del progetto](#stato-del-progetto)
+- [Novità del 13 novembre](#novità-del-13-novembre)
 - [Perché la ricompilazione statica](#perché-la-ricompilazione-statica)
 - [Come funziona](#come-funziona)
   - [1. Analisi dell'eseguibile](#1-analisi-delleseguibile)
@@ -41,6 +42,7 @@
 - [Prestazioni](#prestazioni)
 - [Dispositivi di prova](#dispositivi-di-prova)
 - [Requisiti (previsti)](#requisiti-previsti)
+- [Installazione](#installazione)
 - [Roadmap](#roadmap)
 - [Diario dei traguardi](#diario-dei-traguardi)
 - [Sostieni il progetto](#sostieni-il-progetto)
@@ -84,8 +86,8 @@ Questo porting segue un'altra strada, la stessa del port Android di Metro 2033 e
 | **0** | Strumenti, analisi dell'eseguibile, catalogo delle funzioni | ✅ completata |
 | **1** | Traduzione in C e prova su PC Windows | ✅ completata: gioco tradotto **giocabile su PC**, 25–38 fps |
 | **2** | Runtime Android ARM64, grafica Vulkan, audio | 🔧 in corso: **in partita a Parigi** su Galaxy S24 Ultra |
-| **3** | Launcher e comandi touch | 🔧 in corso: launcher, impostazioni e pad touch funzionanti |
-| **4** | Prestazioni | ⏳ iniziata in parallelo alla fase 2 |
+| **3** | Launcher e comandi touch | 🔧 quasi completa: launcher a tema, impostazioni, pad touch con corsa automatica, musica |
+| **4** | Prestazioni | 🔧 in corso: core riservato, scatti dei buffer, attese tra i thread |
 
 ### Cosa funziona già sul telefono
 
@@ -93,19 +95,56 @@ Questo porting segue un'altra strada, la stessa del port Android di Metro 2033 e
 - ✅ **audio** (Wwise, tramite DirectSound ricostruito → AAudio a 48 kHz)
 - ✅ grafica completa: risoluzione nativa dello schermo, texture alte, **post-processing** (il bianco e nero con il rosso)
 - ✅ personaggi animati correttamente e città disegnata a strati (vicino / medio / lontano) senza difetti
-- ✅ **pad virtuale sullo schermo** e **pad Bluetooth** (XInput)
+- ✅ **pad virtuale sullo schermo** con **corsa automatica** (levetta in avanti fino in fondo, come in COD Mobile) e **pad Bluetooth** (XInput)
 - ✅ uscita con il tasto Home e ritorno al gioco senza perdere la partita
 - ✅ cache delle pipeline Vulkan: dal secondo avvio niente ricompilazioni
-- ✅ launcher dedicato con impostazioni video equivalenti a `VideoSetup.exe`
+- ✅ launcher dedicato con icona, illustrazioni a rotazione, impostazioni video equivalenti a `VideoSetup.exe`, musica di sottofondo con interruttore e pulsante Ko-fi
 
 ### Cosa resta da fare
 
-- 🔧 **fluidità**: 15–22 fps nelle strade più pesanti, 23–31 negli interni (obiettivo: 30 stabili)
-- 🔧 attese sui buffer della GPU quando il post-processing è attivo
+- 🔧 **fluidità**: 17–23 fps nelle strade più pesanti, 37–44 nelle zone più leggere (obiettivo: 30 stabili ovunque)
+- 🔧 verificare sul telefono la correzione degli **scatti** dovuti ai buffer della GPU ([novità del 13 novembre](#novità-del-13-novembre))
 - 🔧 filmati Bink (per ora vengono saltati)
 - 🔧 schermi più larghi di 16:9: un elemento dell'HUD fuori bordo resta visibile (si passerà al 16:9 con bande)
 - ⏳ prova su GPU più vecchie con Vulkan 1.1 (RedMagic 5G / Adreno 650)
 - ⏳ editor della disposizione dei comandi e giroscopio
+
+I prossimi passi in ordine di priorità sono nella [roadmap](#prossimi-passi).
+
+---
+
+## Novità del 13 novembre
+
+Una giornata dedicata a fluidità, comandi e launcher, tutto a partire dai log del telefono.
+
+**Prestazioni**
+
+- **Core riservato al thread principale.** Il thread che calcola ogni fotogramma restava *in coda*, pronto
+  ma senza un core libero, per 80–190 ms al secondo. Ora ha tutto per sé il core più veloce del processore
+  (3,4 GHz sull'S24 Ultra), con una priorità più alta, e gli altri thread dell'app lavorano sugli altri core:
+  il tempo in coda è sceso a **1–15 ms al secondo**. Si può spegnere in *Diagnostica*.
+- **Meno scatti.** Il gioco aggiorna di continuo piccoli buffer di vertici che la GPU sta ancora usando, e
+  DXVK, prima di scriverci, aspettava che la GPU finisse il fotogramma: fino a 70 ms di blocco. Ora i dati
+  vanno in una copia nuova del buffer (`D3DLOCK_DISCARD`) e non si aspetta più. *Da confermare con la
+  prossima prova sul telefono.*
+- **Profilo basso corretto.** Il profilo *Basso* lasciava la distanza visiva al massimo; ora la distanza
+  scende con il profilo e nelle strade si disegnano molti meno oggetti.
+
+**Comandi**
+
+- **Corsa automatica.** Spingi la levetta sinistra in avanti fino in fondo e il personaggio corre; tienila
+  lì un attimo e la corsa resta bloccata (vibrazione e scritta *CORSA*): puoi alzare il dito e muovere solo
+  la visuale. Un tocco sulla levetta la sblocca. Si può spegnere in *Comandi*.
+- **Visuale più reattiva.** I tre profili di velocità della telecamera sono circa il 15% più rapidi.
+
+**Launcher**
+
+- **Icona** a tema, adattiva: il telefono la ritaglia a cerchio, squircle o quadrato secondo il suo stile.
+- **Musica di sottofondo** con un interruttore in alto a destra: si accende e si spegne con un tocco, entra
+  ed esce in dissolvenza e si ferma da sola quando parte il gioco o arriva una chiamata. Si possono
+  aggiungere brani propri in `/sdcard/Saboteur/musica` (mp3, ogg, m4a, flac). I brani del launcher, creati
+  con l'AI, sono in arrivo.
+- **Pulsante Ko-fi** illustrato in fondo alle impostazioni.
 
 ---
 
@@ -253,32 +292,40 @@ telefono:
 
 ### 8. Launcher e comandi touch
 
-- **Launcher** a tutto schermo con immagini a rotazione, pulsante *Gioca* e un foglio laterale con tre
-  sezioni: **Video**, **Comandi**, **Diagnostica**.
+- **Launcher** a tutto schermo con illustrazioni a rotazione, pulsante *Gioca* e un foglio laterale con tre
+  sezioni: **Video**, **Comandi**, **Diagnostica**; in alto a destra l'interruttore della **musica**.
 - **Impostazioni video** con le stesse voci di `VideoSetup.exe` (che è un programma .NET per Windows e su
   Android non può girare): ombre, distanza visiva, qualità di texture, oggetti e "fette" della città,
   post-processing, profili basso/medio/alto, più la **risoluzione di disegno** al 100, 75 o 50%.
-- **Pad virtuale** in stile Xbox: levetta sinistra fissa, visuale trascinando sulla destra, A/B/X/Y,
-  dorsali e grilletti, croce, L3/R3, Back/Start, velocità della visuale regolabile.
+- **Pad virtuale** in stile Xbox: levetta sinistra fissa con **corsa automatica** (in avanti fino in fondo:
+  corri; tenuta lì: corsa bloccata), visuale trascinando sulla destra, A/B/X/Y, dorsali e grilletti, croce,
+  L3/R3, Back/Start, velocità della visuale regolabile.
 - **Pad Bluetooth** riconosciuti come controller XInput.
+- **Musica di sottofondo** nel launcher, con i brani dell'APK e quelli di `/sdcard/Saboteur/musica`, e
+  interruttore per spegnerla.
 
 ---
 
 ## Prestazioni
 
-Misure sul **Samsung Galaxy S24 Ultra** (Snapdragon 8 Gen 3), profilo video basso, distanza visiva alta:
+Misure sul **Samsung Galaxy S24 Ultra** (Snapdragon 8 Gen 3), profilo video basso:
 
 | Situazione | Fotogrammi al secondo |
 | --- | --- |
 | Interni (Belle) | 23–31 |
-| Strade, zone normali | 21–26 |
-| Strade, zone pesanti (3.000–4.800 disegni per fotogramma) | 15–22 |
+| Strade, zone più leggere (1.000–1.700 disegni per fotogramma) | 37–44 |
+| Strade, zone pesanti (2.300–3.700 disegni per fotogramma) | 17–23 |
 | Con post-processing attivo | 12–14 (in miglioramento) |
 
 Da dove si è partiti: 13–16 fps nella prima versione giocabile sul telefono. Gli strumenti integrati
 (profilo a campioni per thread, tempi di Direct3D per metodo, attese per oggetto, tempo "in coda" dei
-thread, frequenza dei core) mostrano che oggi il limite non è il calcolo ma la catena di attese tra i
-thread del gioco e la frequenza a cui Android tiene i core grandi: è lì che si lavora adesso.
+thread, frequenza dei core) mostrano dove va il tempo adesso:
+
+- il **thread principale** del gioco è al lavoro 850–940 ms ogni secondo anche con un core tutto suo: è lui a
+  dettare il ritmo, insieme alla frequenza a cui il telefono tiene i core;
+- dopo qualche minuto il telefono si scalda e porta i core grandi **da 3,4 a circa 2 GHz**;
+- i thread di **DXVK** aspettano un core libero per 250–320 ms al secondo, e il thread principale aspetta i
+  thread dei lavori per 90–170 ms al secondo: sono i prossimi punti su cui lavorare.
 
 ---
 
@@ -295,10 +342,37 @@ thread del gioco e la frequenza a cui Android tiene i core grandi: è lì che si
 
 Indicativi, possono cambiare prima di una versione pubblica:
 
-- una **copia PC di The Saboteur** (riferimento: GOG), con ≈7,7 GB di dati da copiare sul telefono;
-- **Android 10 o successivo**, processore **ARM64**, GPU con **Vulkan**;
+- una **copia PC di The Saboteur** (riferimento: GOG), con ≈7,7 GB di dati da copiare sul telefono: senza il
+  `Saboteur.exe` originale l'app non parte;
+- **Android 10 o successivo**, processore **ARM64**, GPU con **Vulkan** (provata con Vulkan 1.3; 1.1 da provare);
 - un SoC di fascia alta recente (classe Snapdragon 8 Gen 2/Gen 3) per giocare in modo fluido;
+- circa 8 GB liberi sul telefono per i dati del gioco, più ≈300 MB per l'app;
 - facoltativo: un controller Bluetooth.
+
+---
+
+## Installazione
+
+> [!NOTE]
+> L'APK di prova non è ancora pubblico. Quando lo sarà, comparirà nella pagina
+> [Releases](https://github.com/lumishelf/saboteur-android/releases); i passi saranno questi.
+
+1. Installa *The Saboteur* su PC (versione GOG) e copia **l'intera cartella del gioco** sul telefono in
+   `/sdcard/Saboteur/game`: deve esserci `/sdcard/Saboteur/game/Saboteur.exe`.
+2. Installa l'APK e aprilo.
+3. Il launcher chiede il permesso **Accesso a tutti i file**, che serve per leggere i file del gioco:
+   attivalo e torna nel launcher.
+4. Scegli il profilo video (per iniziare *Basso*) e tocca **Gioca**.
+
+| Percorso sul telefono | Cosa contiene |
+| --- | --- |
+| `/sdcard/Saboteur/game` | i file del gioco, copiati dalla propria installazione PC |
+| `/sdcard/Saboteur/save` | salvataggi e impostazioni del gioco |
+| `/sdcard/Saboteur/logs/saboteur.log` | il log dell'ultima partita, da allegare quando si segnala un problema |
+| `/sdcard/Saboteur/musica` | brani propri per il launcher |
+| `/sdcard/Saboteur/opzioni.ini` | le impostazioni del launcher |
+
+L'APK non contiene file del gioco: grafica, suoni, testi e dati arrivano tutti dalla propria copia.
 
 ---
 
@@ -311,12 +385,31 @@ Indicativi, possono cambiare prima di una versione pubblica:
 - [x] Primo avvio su Android, audio, partita a Parigi
 - [x] Personaggi, mappa e post-processing corretti sugli Adreno
 - [x] Pad virtuale, pad Bluetooth, launcher con impostazioni video
+- [x] Core riservato al thread principale, corsa automatica, icona e musica nel launcher
+- [ ] Scatti dei buffer della GPU eliminati (correzione pronta, da confermare)
 - [ ] 30 fps stabili in strada sull'S24 Ultra
 - [ ] Post-processing senza perdita di fluidità
 - [ ] Filmati Bink
 - [ ] Formato 16:9 con bande e HUD corretto sugli schermi larghi
 - [ ] GPU con Vulkan 1.1 (Adreno 650 e simili)
 - [ ] Editor della disposizione dei comandi, giroscopio
+
+### Prossimi passi
+
+In ordine di priorità:
+
+1. **Scatti**: misurare sul telefono l'effetto della nuova scrittura dei buffer e chiudere i casi rimasti.
+2. **Thread di DXVK**: oggi aspettano un core libero per 250–320 ms al secondo; con priorità e core adatti
+   la GPU riceve il lavoro prima.
+3. **Attese del thread principale**: capire perché aspetta i thread dei lavori (90–170 ms al secondo) e
+   accorciare quella catena.
+4. **Calore**: un limite facoltativo a 30 fps, per un telefono più fresco e un ritmo più regolare.
+5. **Post-processing** senza perdita di fluidità.
+6. **Filmati Bink**, decodificati con FFmpeg.
+7. **16:9 con bande** e HUD corretto sugli schermi larghi.
+8. **Vulkan 1.1**: prima prova sul RedMagic 5G (Adreno 650).
+9. **Musica del launcher**: i brani creati con l'AI.
+10. **Comandi**: editor della disposizione e giroscopio.
 
 ---
 
@@ -333,6 +426,8 @@ Indicativi, possono cambiare prima di una versione pubblica:
 | 11 nov 2026 | Città a strati corretta (fette di profondità), lettura in ritardo, impostazioni video |
 | 11 nov 2026 | Stato della CPU in un blocco per thread, attese mirate: da 15 a 23–31 fps negli interni |
 | 12–13 nov 2026 | Launcher rifatto, profilo delle prestazioni per thread, ottimizzazioni Android |
+| 13 nov 2026 | Pagina GitHub e Ko-fi; icona dell'app, pulsante Ko-fi e musica di sottofondo nel launcher |
+| 13 nov 2026 | Core riservato al thread principale (in coda da 77–188 a 1–15 ms/s), corsa automatica, profilo basso corretto, buffer della GPU senza attese |
 
 ---
 

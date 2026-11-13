@@ -446,7 +446,9 @@ in modo nativo, puoi offrirmi un caffè su Ko-fi.
 
 <a href="https://ko-fi.com/theportdude"><img src="https://ko-fi.com/img/githubbutton_sm.svg" alt="Sostienimi su Ko-fi" height="36"/></a>
 
-Una donazione è un sostegno allo sviluppo: **non** dà diritto a una copia del gioco né a file del gioco.
+Le donazioni sono **del tutto facoltative** e servono solo per l'abbonamento a Claude dell'obiettivo qui
+sopra. L'APK, quando sarà disponibile, sarà **gratuito e uguale per tutti**: chi dona non riceve versioni in
+anteprima, funzioni in più né file del gioco.
 Anche una ⭐ al repository aiuta a far conoscere il progetto.
 
 ---

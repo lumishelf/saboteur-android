@@ -442,7 +442,9 @@ you can buy me a coffee on Ko-fi.
 
 <a href="https://ko-fi.com/theportdude"><img src="https://ko-fi.com/img/githubbutton_sm.svg" alt="Support me on Ko-fi" height="36"/></a>
 
-A donation supports development: it does **not** grant a copy of the game or any game files.
+Donations are **entirely optional** and go only towards the Claude subscription in the goal above. The
+APK, once available, will be **free and the same for everyone**: donors get no early builds, extra
+features or game files.
 Starring the repository ⭐ also helps people find the project.
 
 ---

@@ -336,7 +336,15 @@ Indicative, may change before any public build:
 ## Support the project
 
 This is a spare-time project. If you like the idea of playing *The Saboteur* natively on your phone,
-you can buy me a coffee on Ko-fi: it helps cover development time and test devices.
+you can buy me a coffee on Ko-fi.
+
+> [!TIP]
+> **Current goal: €90 for a Claude Max/Ultra subscription.**
+> These ports are built together with Claude, Anthropic's AI assistant: analysing the executable,
+> writing the runtime, fixing translator bugs, reading crash logs from the phone. On a project this
+> size (11 million lines of generated C) the usage limits of my current plan run out fast: with
+> Max/Ultra there's much more work per day, and *The Saboteur* and the next ports move faster.
+> Goal progress is on the [Ko-fi page](https://ko-fi.com/theportdude).
 
 <a href="https://ko-fi.com/theportdude"><img src="https://ko-fi.com/img/githubbutton_sm.svg" alt="Support me on Ko-fi" height="36"/></a>
 

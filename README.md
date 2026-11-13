@@ -339,7 +339,15 @@ Indicativi, possono cambiare prima di una versione pubblica:
 ## Sostieni il progetto
 
 Questo è un progetto fatto nel tempo libero. Se ti piace l'idea di giocare *The Saboteur* sul telefono
-in modo nativo, puoi offrirmi un caffè su Ko-fi: aiuta a coprire il tempo di sviluppo e i dispositivi di prova.
+in modo nativo, puoi offrirmi un caffè su Ko-fi.
+
+> [!TIP]
+> **Obiettivo attuale: 90 € per un abbonamento Claude Max/Ultra.**
+> Il porting si fa insieme a Claude, l'assistente AI di Anthropic: analisi dell'eseguibile, runtime,
+> correzione degli errori del traduttore, lettura dei log dei crash dal telefono. Su un progetto di
+> queste dimensioni (11 milioni di righe di C generato) i limiti del piano attuale finiscono presto:
+> con Max/Ultra si lavora molto di più ogni giorno e *The Saboteur*, e i porting successivi, vanno
+> avanti più in fretta. L'avanzamento dell'obiettivo è sulla [pagina Ko-fi](https://ko-fi.com/theportdude).
 
 <a href="https://ko-fi.com/theportdude"><img src="https://ko-fi.com/img/githubbutton_sm.svg" alt="Sostienimi su Ko-fi" height="36"/></a>
 

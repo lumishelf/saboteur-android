@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 420" width="1280" height="420" role="img" aria-label="The Saboteur — porting Android con ricompilazione statica">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0a0a0a"/>
+      <stop offset="0.65" stop-color="#151515"/>
+      <stop offset="1" stop-color="#2a2a2a"/>
+    </linearGradient>
+    <linearGradient id="beam" x1="0" y1="1" x2="0" y2="0">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.16"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="fade" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#0a0a0a" stop-opacity="0.92"/>
+      <stop offset="0.55" stop-color="#0a0a0a" stop-opacity="0.35"/>
+      <stop offset="1" stop-color="#0a0a0a" stop-opacity="0"/>
+    </linearGradient>
+    <filter id="grain" x="0" y="0" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" stitchTiles="stitch" result="n"/>
+      <feColorMatrix type="saturate" values="0"/>
+      <feComponentTransfer><feFuncA type="linear" slope="0.07"/></feComponentTransfer>
+    </filter>
+  </defs>
+
+  <rect width="1280" height="420" fill="url(#sky)"/>
+
+  <!-- fotoelettriche -->
+  <polygon points="905,420 955,420 1130,0 1010,0" fill="url(#beam)"/>
+  <polygon points="1040,420 1080,420 820,0 720,0" fill="url(#beam)"/>
+
+  <!-- torre in lontananza -->
+  <g fill="#303030">
+    <path d="M1000 330 L1012 230 L1017 150 L1019 92 L1021 92 L1023 150 L1028 230 L1040 330 Z"/>
+    <rect x="1004" y="268" width="32" height="5"/>
+    <rect x="1010" y="205" width="20" height="4"/>
+  </g>
+
+  <!-- tetti di Parigi -->
+  <path fill="#111111" d="M0 420 V352 H40 V338 L62 322 L84 338 V352 H120 V330 H134 V318 H142 V330 H170 V346 L205 318 L240 346 V360 H280 V334 L300 320 L320 334 V344 H352 V326 H360 V312 H366 V326 H392 V350 H430 V328 L470 300 L510 328 V352 H548 V336 H560 V324 H568 V336 H600 V356 H640 V330 L668 310 L696 330 V346 H730 V322 H738 V310 H744 V322 H772 V344 H812 V326 L846 302 L880 326 V350 H920 V336 L940 324 L960 336 V352 H1000 V330 H1010 V318 H1016 V330 H1050 V348 L1080 326 L1110 348 V358 H1150 V334 L1172 318 L1194 334 V350 H1230 V328 H1240 V316 H1246 V328 H1280 V420 Z"/>
+  <!-- una sola finestra rossa -->
+  <rect x="852" y="334" width="9" height="13" fill="#c8102e"/>
+  <rect x="852" y="334" width="9" height="13" fill="#ff3b4f" opacity="0.35"/>
+
+  <rect width="1280" height="420" fill="url(#fade)"/>
+  <rect width="1280" height="420" filter="url(#grain)"/>
+
+  <!-- testi -->
+  <g font-family="Impact, 'Haettenschweiler', 'Arial Narrow Bold', 'Roboto Condensed', sans-serif-condensed, sans-serif" fill="#f2efe8">
+    <text x="64" y="150" font-size="104" textLength="720" lengthAdjust="spacingAndGlyphs">THE SABOTEUR</text>
+  </g>
+  <rect x="64" y="172" width="330" height="44" fill="#c8102e"/>
+  <text x="80" y="203" font-family="Impact, 'Arial Narrow Bold', 'Roboto Condensed', sans-serif" font-size="27" textLength="298" lengthAdjust="spacingAndGlyphs" fill="#f2efe8">ANDROID · ARM64</text>
+  <g font-family="'Courier New', 'Courier', monospace" fill="#d9d4c7" font-size="21">
+    <text x="64" y="262">Ricompilazione statica · x86 → ARM64</text>
+    <text x="64" y="292">Direct3D 9 → Vulkan (DXVK) · niente Wine, niente emulatore</text>
+  </g>
+  <text x="64" y="372" font-family="'Courier New', 'Courier', monospace" font-size="15" fill="#8a857a">Progetto amatoriale non ufficiale · nessun file del gioco incluso</text>
+</svg>

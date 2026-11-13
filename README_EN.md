@@ -123,17 +123,21 @@ This port takes a different route, the same one used by the Android port of Metr
 ## How it works
 
 ```mermaid
-flowchart LR
-    A["Saboteur.exe<br/>x86 · 32-bit · 14.8 MB"] --> B["PE analysis<br/>RTTI · vtables"]
-    B --> C["Catalogue<br/>148,805 entries"]
-    C --> D["Lift x86 → C<br/>pcrecomp lift32"]
-    D --> E["291 C files<br/>11M lines"]
-    E --> F["clang · NDK<br/>ARM64 -O2"]
-    F --> G["libsaboteur.so"]
-    R["Portable runtime<br/>kernel32 · user32 · DirectSound…"] --> G
-    X["DXVK for Android<br/>D3D9 → Vulkan"] --> G
-    G --> H["APK + launcher"]
-    D2[("Game data<br/>your own copy")] -.-> H
+flowchart TD
+    subgraph T["Translation · done once"]
+        A["Saboteur.exe · x86 32-bit"] --> B["PE analysis · RTTI · vtables"]
+        B --> C["Catalogue · 148,805 entries"]
+        C --> D["Lift x86 → C · pcrecomp lift32"]
+        D --> E["291 C files · 11M lines"]
+    end
+    subgraph A2["Android build"]
+        F["clang · NDK · ARM64 -O2"] --> G["libsaboteur.so"]
+        R["Portable runtime · kernel32, user32, DirectSound…"] --> G
+        X["DXVK for Android · D3D9 → Vulkan"] --> G
+        G --> H["APK + launcher"]
+    end
+    E --> F
+    DATA[("Game data · your own copy")] -.-> H
 ```
 
 ### 1. Analysing the executable

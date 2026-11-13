@@ -124,17 +124,21 @@ Questo porting segue un'altra strada, la stessa del port Android di Metro 2033 e
 ## Come funziona
 
 ```mermaid
-flowchart LR
-    A["Saboteur.exe<br/>x86 · 32 bit · 14,8 MB"] --> B["Analisi PE<br/>RTTI · vtable"]
-    B --> C["Catalogo<br/>148.805 voci"]
-    C --> D["Lift x86 → C<br/>pcrecomp lift32"]
-    D --> E["291 file C<br/>11 mln di righe"]
-    E --> F["clang · NDK<br/>ARM64 -O2"]
-    F --> G["libsaboteur.so"]
-    R["Runtime portabile<br/>kernel32 · user32 · DirectSound…"] --> G
-    X["DXVK per Android<br/>D3D9 → Vulkan"] --> G
-    G --> H["APK + launcher"]
-    D2[("Dati del gioco<br/>copia personale")] -.-> H
+flowchart TD
+    subgraph T["Traduzione · una volta sola"]
+        A["Saboteur.exe · x86 32 bit"] --> B["Analisi PE · RTTI · vtable"]
+        B --> C["Catalogo · 148.805 voci"]
+        C --> D["Lift x86 → C · pcrecomp lift32"]
+        D --> E["291 file C · 11 milioni di righe"]
+    end
+    subgraph A2["Build Android"]
+        F["clang · NDK · ARM64 -O2"] --> G["libsaboteur.so"]
+        R["Runtime portabile · kernel32, user32, DirectSound…"] --> G
+        X["DXVK per Android · D3D9 → Vulkan"] --> G
+        G --> H["APK + launcher"]
+    end
+    E --> F
+    DATI[("Dati del gioco · copia personale")] -.-> H
 ```
 
 ### 1. Analisi dell'eseguibile
